@@ -6,12 +6,13 @@
 #include <unordered_map>
 #include <vector>
 #include <map>
+#include <tuple>
 
 using namespace rbxti;
 
 namespace optrace {
 
-  typedef std::vector<std::pair<int,int> > InstructionList;
+  typedef std::vector<std::tuple<int,int,int> > InstructionList;
   typedef std::map<r_mint, rcompiled_code> CodeMap; 
 
   class Optrace {
@@ -29,14 +30,14 @@ namespace optrace {
       lock_.unlock();
     }
 
-    void add(Env *env, r_mint id, int ip);
+    void add(Env *env, r_mint id, int ip, int tid);
     robject results(Env *env);
   };
 
-  void Optrace::add(Env *env, r_mint id, int ip) {
+  void Optrace::add(Env *env, r_mint id, int ip, int tid) {
     lock();
 
-    inst_trace_.push_back(std::make_pair(id, ip));
+    inst_trace_.push_back(std::make_tuple(id, ip, tid));
 
     unlock();
   }
@@ -55,12 +56,13 @@ namespace optrace {
     rarray trace_array = env->array_new(inst_trace_.size());
     int trace_index = 0;
     for(InstructionList::iterator i = inst_trace_.begin(); i != inst_trace_.end(); ++i) {
-      CodeMap::iterator j = code_map.find(i->first);
+      CodeMap::iterator j = code_map.find(std::get<0>(*i));
       if(j != code_map.end()) {
         rarray entry_array = env->array_new(2);
-        env->array_set(entry_array, 0, env->integer_new(i->second));
+        env->array_set(entry_array, 0, env->integer_new(std::get<1>(*i)));
         env->array_set(entry_array, 1, j->second);
         env->array_set(trace_array, trace_index++, entry_array); 
+        env->array_set(entry_array, 2, env->integer_new(std::get<2>(*i)));
       }     
     }
 
@@ -90,7 +92,7 @@ namespace optrace {
 
       if(!optrace) return;
 
-      optrace->add(env, env->machine_code_id(mcode), ip);
+      optrace->add(env, env->machine_code_id(mcode), ip, env->current_thread_id());
     }
   }
 

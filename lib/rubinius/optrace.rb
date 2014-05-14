@@ -24,7 +24,7 @@ module Rubinius
       self
     end
 
-    # :results is an array of [Integer, CompiledCode] instances
+    # The :results array is a of <inst_ptr, CompiledCode, thread_id> arrays
     attr_reader :results
 
     def initialize
@@ -49,10 +49,12 @@ module Rubinius
     #TODO: This is slow. Might want to optimize or memoize the result
     def trace 
       return nil unless @stopped
-      trace = nil
+      trace = Array.new
       @results.each do |r|
-        ip = r[0]
-        trace << r[1].decode.select { |t| t.ip == ip }
+        elm = Array.new
+        elm << r[2]
+        elm << r[1].decode.select { |t| t.ip == r[0] }
+        trace << elm
       end
       trace
     end
