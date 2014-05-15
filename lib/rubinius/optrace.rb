@@ -62,7 +62,7 @@ module Rubinius
     def print_trace 
       res = String.new
       self.trace if @trace.nil?
-      @trace.each { |t| res << "#{t[0]}:   #{t[1][0]}\n" }
+      @trace.each { |t| res << "#{t[0]}:   #{t[1][0]}\n" } unless trace.nil?
       res
     end
 
