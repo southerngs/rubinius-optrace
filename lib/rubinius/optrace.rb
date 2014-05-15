@@ -49,15 +49,23 @@ module Rubinius
     #TODO: This is slow. Might want to optimize or memoize the result
     def trace 
       return nil unless @stopped
-      trace = Array.new
+      @trace = Array.new
       @results.each do |r|
         elm = Array.new
         elm << r[2]
         elm << r[1].decode.select { |t| t.ip == r[0] }
-        trace << elm
+        @trace << elm
       end
-      trace
+      @trace
     end
+
+    def print_trace 
+      res = String.new
+      self.trace if @trace.nil?
+      @trace.each { |t| res << "#{t[0]}:   #{t[1][0]}\n" }
+      res
+    end
+
   end
 end
 
